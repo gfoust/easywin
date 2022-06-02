@@ -1,4 +1,5 @@
 #include "component.hpp"
+#include "panel.hpp"
 #include "win32dow.hpp"
 
 namespace easywin {

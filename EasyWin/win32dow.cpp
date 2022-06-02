@@ -38,7 +38,7 @@ namespace easywin {
   } extents;
 
   BOOL onCreate(HWND hwnd, LPCREATESTRUCT lpCreateStruct) {
-    Panel* panel= (Panel*)lpCreateStruct->lpCreateParams;
+    Panel* panel = (Panel*)lpCreateStruct->lpCreateParams;
     SetWindowLongPtr(hwnd, 0, (LONG_PTR)panel);
     panel->hwnd = hwnd;
     panel->onCreate();
@@ -88,14 +88,14 @@ namespace easywin {
       si.cbSize = sizeof(SCROLLINFO);
       si.fMask = SIF_POS;
       GetScrollInfo(hwnd, SB_HORZ, &si);
-      xform.eDx = -si.nPos;
+      xform.eDx = (float) -si.nPos;
     }
     if (GetWindowLong(hwnd, GWL_STYLE) & WS_VSCROLL) {
       SCROLLINFO si;
       si.cbSize = sizeof(SCROLLINFO);
       si.fMask = SIF_POS;
       GetScrollInfo(hwnd, SB_VERT, &si);
-      xform.eDy = -si.nPos;
+      xform.eDy = (float) -si.nPos;
     }
     if (xform.eDx != 0 || xform.eDy != 0) {
       SetGraphicsMode(hdc, GM_ADVANCED);
@@ -309,8 +309,8 @@ namespace easywin {
   }
 
   void setComponent(HWND hwnd, Panel* panel) {
-    if ((WNDPROC)GetWindowLongPtr(hwnd, GWLP_WNDPROC) == wndProc) {
-      SetWindowLongPtr(hwnd, 0, (LONG_PTR)&panel);
+    if (hwnd && (WNDPROC)GetWindowLongPtr(hwnd, GWLP_WNDPROC) == wndProc) {
+      SetWindowLongPtr(hwnd, 0, (LONG_PTR)panel);
     }
   }
 
@@ -359,4 +359,20 @@ namespace easywin {
 
     InvalidateRect(hwnd, NULL, true);
   }
-}  // namespace Win32dow
+
+  void allocateConsole() {
+    AllocConsole();
+    FILE* oldin, * oldout, * olderr;
+    freopen_s(&oldin, "CONIN$", "r", stdin);
+    freopen_s(&oldout, "CONOUT$", "w", stdout);
+    freopen_s(&olderr, "CONOUT$", "w", stderr);
+  }
+
+}
+
+int main();
+
+int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ PSTR szCmdLine, _In_ int iCmdShow) {
+  easywin::hInstance = hInstance;
+  return main();
+}

@@ -56,6 +56,7 @@ namespace easywin {
     if (hdc == 0) {
       throw std::logic_error("Only call drawText from the Paint method");
     }
+    SetTextColor(hdc, textColor);
     SetBkColor(hdc, fillColor);
     TextOut(hdc, topLeft.x, topLeft.y, text.data(), (int)text.size());
   }

@@ -14,6 +14,9 @@ namespace easywin {
     void requestRepaint();
 
   public:
+    Panel() = default;
+    Panel(Panel&& src) noexcept;
+    Panel& operator =(Panel&& src) noexcept;
     Size contentSize() const;
     void resizeContent(Size size);
     virtual void onCreate();
@@ -27,6 +30,7 @@ namespace easywin {
     virtual void onMouseWheel(int x, int y, bool up);
     
     friend BOOL onCreate(HWND hwnd, LPCREATESTRUCT lpCreateStruct);
+    friend class Container;
   };
 
 }

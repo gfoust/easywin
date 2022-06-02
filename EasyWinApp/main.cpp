@@ -12,7 +12,8 @@ public:
 
   void onPaint(Canvas& canvas) override {
     auto sz = clientSize();
-    canvas.drawRectangle({ 0, 0 }, { sz.width, sz.height }, 0, Colors::Blue);
+    canvas.drawRectangle({ 0, 0 }, { sz.width, sz.height }, 0, Colors::White);
+    canvas.drawText({ 2, 2 }, "Hello, world", Colors::Red, Colors::White);
   }
 };
 
@@ -34,13 +35,11 @@ class ManPanel : public Panel {
 
 class MyWin : public Window {
 public:
-  BluePanel blue;
-  ManPanel man;
-
+  
   void onCreate() override {
     resizeContent({ 800, 600 });
-    addChild(blue, { 10, 10 }, { 100, 300 });
-    addChild(man, { 200, 250 }, { 400, 600 });
+    addChild(BluePanel{}, { 10, 10 }, { 100, 300 });
+    //addChild(ManPanel{}, { 200, 250 }, { 400, 600 });
   }
 
   void onPaint(Canvas& canvas) override {
@@ -60,17 +59,23 @@ public:
 
 };
 
-int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ PSTR szCmdLine, _In_ int iCmdShow) {
-  AllocConsole();
-  FILE *oldin, *oldout, *olderr;
-  freopen_s(&oldin, "CONIN$", "r", stdin);
-  freopen_s(&oldout, "CONOUT$", "w", stdout);
-  freopen_s(&olderr, "CONOUT$", "w", stderr);
+class BallWin : public Window {
+  int x = 100, y = 100;
+public:
 
-  MyWin window;
-  return window.run();
-}
+  void onMouseMove(int x, int y) override {
+    this->x = x;
+    this->y = y;
+    requestRepaint();
+  }
+
+  void onPaint(Canvas& canvas) override {
+    canvas.drawEllipse({ x, y }, 100, Colors::Black, Colors::Red);
+  }
+};
 
 int main() {
-
+  easywin::allocateConsole();
+  MyWin window;
+  return window.run();
 }

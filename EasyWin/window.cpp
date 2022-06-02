@@ -57,14 +57,19 @@ namespace easywin {
         create();
       }
 
-      ShowWindow(hwnd, SW_SHOWNORMAL);
+      if (hwnd != NULL) {
+        ShowWindow(hwnd, SW_SHOWNORMAL);
 
-      MSG msg;
-      while (GetMessage(&msg, NULL, 0, 0)) {
-        TranslateMessage(&msg);
-        DispatchMessage(&msg);
+        MSG msg;
+        while (GetMessage(&msg, NULL, 0, 0)) {
+          TranslateMessage(&msg);
+          DispatchMessage(&msg);
+        }
+        return (int)msg.wParam;
       }
-      return (int)msg.wParam;
+      else {
+        return -1;
+      }
     }
     catch (std::exception& e) {
       MessageBox(NULL, e.what(), "Error", MB_ICONERROR | MB_OK);

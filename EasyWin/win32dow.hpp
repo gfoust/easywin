@@ -19,6 +19,22 @@ namespace easywin {
   );
 
   void setComponent(HWND hwnd, class Panel* panel);
-  
   void setScrollSize(HWND hwnd, Size size);
+
+  inline
+  void setId(HWND hwnd, int id) {
+    SetWindowLong(hwnd, GWL_ID, id);
+  }
+
+  inline
+  void reposition(HWND hwnd, Point location, Size size) {
+    MoveWindow(hwnd, location.x, location.y, size.width, size.height, true);
+  }
+
+  inline
+  void setParent(HWND hwnd, HWND parent) {
+    SetParent(hwnd, parent);
+  }
+
+  void allocateConsole();
 };

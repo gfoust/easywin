@@ -4,6 +4,16 @@
 
 namespace easywin {
 
+  Panel::Panel(Panel&& src) noexcept : Component(std::move(src)) {
+    setComponent(hwnd, this);
+  }
+
+  Panel& Panel::operator =(Panel&& src) noexcept {
+    Component::operator =(std::move(src));
+    setComponent(hwnd, this);
+    return *this;
+  }
+
   const char* Panel::className() const {
     return typeid(*this).name() + 6;
   }
@@ -37,22 +47,9 @@ namespace easywin {
   }
 
   void Panel::onCreate() {
-    //RECT client;
-    //GetClientRect(hwnd, &client);
-
-    //int rows = client.bottom / extents.yChar;
-
-    //SCROLLINFO si;
-    //si.cbSize = sizeof(SCROLLINFO);
-    //si.fMask = SIF_RANGE | SIF_PAGE;
-    //si.nMin = 0;
-    //si.nMax = rows;
-    //si.nPage = rows;
-    //SetScrollInfo(hwnd, SB_VERT, &si, true);
   }
 
   void Panel::onDestroy() {
-
   }
 
   void Panel::onPaint(Canvas& canvas) {
