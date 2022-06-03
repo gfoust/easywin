@@ -1,6 +1,8 @@
 #pragma once
-#include "win32dow.hpp"
 #include "canvas.hpp"
+#include <string>
+
+typedef struct HWND__* HWND;
 
 namespace easywin {
 
@@ -18,14 +20,14 @@ namespace easywin {
 
     virtual const char* className() const = 0;
     virtual unsigned long style() const = 0;
-    virtual const char* text() const;
-    virtual void create(HWND parent, int id, Point position, Size size);
+    virtual Size size(const char* text) const;
+    virtual void create(HWND parent, int id, Point position, Size size, const char* text);
 
   public:
     Component() = default;
     Component(const Component&) = delete;
-    Component(Component&&) noexcept;
     Component& operator =(const Component&) = delete;
+    Component(Component&&) noexcept;
     Component& operator =(Component&&) noexcept;
     virtual ~Component();
     Size clientSize() const;

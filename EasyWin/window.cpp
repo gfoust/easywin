@@ -42,12 +42,13 @@ namespace easywin {
     return WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN | WS_HSCROLL | WS_VSCROLL;
   }
 
-  void Window::create() {
+  void Window::create(const char* title) {
     Component::create(
       NULL,
       NULL,
       { CW_USEDEFAULT, CW_USEDEFAULT },
-      { CW_USEDEFAULT, CW_USEDEFAULT }
+      { CW_USEDEFAULT, CW_USEDEFAULT },
+      title
     );
   }
 
@@ -75,16 +76,6 @@ namespace easywin {
       MessageBox(NULL, e.what(), "Error", MB_ICONERROR | MB_OK);
       return -1;
     }
-  }
-
-  string Window::getTitle() {
-    char buffer[200];
-    GetWindowText(hwnd, buffer, 200);
-    return buffer;
-  }
-
-  void Window::setTitle(const string& title) {
-    SetWindowText(hwnd, title.c_str());
   }
 
 }  // namespace easywin

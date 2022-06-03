@@ -1,19 +1,24 @@
 #include "component.hpp"
 #include "panel.hpp"
 #include "win32dow.hpp"
+#include <stdexcept>
 
 namespace easywin {
 
-  const char* Component::text() const {
-    return "";
+  Size Component::size(const char* text) const {
+    return { 10, 10 };
   }
 
-  void Component::create(HWND parent, int id, Point position, Size size) {
+  void Component::create(HWND parent, int id, Point position, Size size, const char* text) {
+    if (hwnd != NULL) {
+      throw std::logic_error("Attempting to re-create component");
+    }
+    
     registerClass(className());  // no-op if already defined
 
     createWindow(
       className(),          // window class name
-      text(),               // window caption
+      text,                 // window caption
       style(),              // window style
       position.x,           // initial x position
       position.y,           // initial y position

@@ -1,13 +1,14 @@
 #pragma once
 #undef UNICODE  
 #include <windows.h>
+#include <string>
 #include "util.hpp"
 
 namespace easywin {
 
   void registerClass(const char* className);
 
-  void createWindow(
+  HWND createWindow(
     const char* className,
     const char* text,
     unsigned long style,
@@ -34,6 +35,13 @@ namespace easywin {
   inline
   void setParent(HWND hwnd, HWND parent) {
     SetParent(hwnd, parent);
+  }
+
+  std::string getText(HWND hwnd);
+
+  inline
+  void setText(HWND hwnd, const char* text) {
+    SetWindowText(hwnd, text);
   }
 
   void allocateConsole();

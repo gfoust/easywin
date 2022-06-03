@@ -14,10 +14,12 @@ namespace easywin {
     void addMenu(std::string name);
     void addMenuItem(int menuPos, std::string name, int id);
     unsigned long style() const override;
-    const char* text() const override { return "Window"; }
 
   public:
-    void create();
+    void create(const char* title = "EasyWin Application");
+    inline void create(const std::string& title) {
+      create(title.data());
+    }
     int run();
     std::string getTitle();
     void setTitle(const std::string& title);

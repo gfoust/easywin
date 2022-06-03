@@ -11,12 +11,17 @@ namespace easywin {
   protected:
     const char* className() const override;
     unsigned long style() const override;
-    void requestRepaint();
+    using Component::create;
+    void create(Size size) {
+      Component::create(NULL, 0, Point{ 0, 0 }, size, "");
+    }
 
   public:
     Panel() = default;
     Panel(Panel&& src) noexcept;
     Panel& operator =(Panel&& src) noexcept;
+
+    void requestRepaint();
     Size contentSize() const;
     void resizeContent(Size size);
     virtual void onCreate();

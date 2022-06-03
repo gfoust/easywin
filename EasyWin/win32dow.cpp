@@ -2,11 +2,13 @@
 #include "win32dow.hpp"
 #include "panel.hpp"
 #include "window.hpp"
+#include "button.hpp"
 #include "gdi_canvas.hpp"
 
 #include <windowsx.h>
 #include <stdexcept>
 #include <string>
+#include <strsafe.h>
 
 namespace easywin {
 
@@ -159,10 +161,17 @@ namespace easywin {
 
   void onCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify) {
     Panel* panel = (Panel*)GetWindowLongPtr(hwnd, 0);
-    Window* window = dynamic_cast<Window*>(panel);
 
-    if (hwndCtl == 0 && codeNotify == 0) {
-      //window->menuSelect(id);
+    if (hwndCtl == 0) {
+      if (codeNotify == 0) {
+        //window->menuSelect(id);
+      }
+    }
+    else {
+      Container* container;
+      if (codeNotify == BN_CLICKED && (container = dynamic_cast<Container*>(panel))) {
+        container->child<Button>(id - 1).clickHandler();
+      }
     }
   }
 
@@ -283,7 +292,7 @@ namespace easywin {
     }
   }
 
-  void createWindow(
+  HWND createWindow(
     const char* className,
     const char* text,
     unsigned long style,
@@ -293,7 +302,7 @@ namespace easywin {
     long long id,
     LPVOID param
   ) {
-    CreateWindow(
+    HWND check = CreateWindow(
       className,            // window class name
       text,                 // window caption
       style,                // window style
@@ -306,6 +315,27 @@ namespace easywin {
       hInstance,            // program instance handle
       param
     );
+
+    if (!check) {
+      LPVOID lpMsgBuf;
+      DWORD dw = GetLastError();
+
+      FormatMessage(
+        FORMAT_MESSAGE_ALLOCATE_BUFFER |
+        FORMAT_MESSAGE_FROM_SYSTEM |
+        FORMAT_MESSAGE_IGNORE_INSERTS,
+        NULL,
+        dw,
+        MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+        (LPTSTR)&lpMsgBuf,
+        0, NULL);
+
+      // Display the error message and exit the process
+
+      LocalFree(lpMsgBuf);
+
+    }
+    return check;
   }
 
   void setComponent(HWND hwnd, Panel* panel) {
@@ -366,6 +396,12 @@ namespace easywin {
     freopen_s(&oldin, "CONIN$", "r", stdin);
     freopen_s(&oldout, "CONOUT$", "w", stdout);
     freopen_s(&olderr, "CONOUT$", "w", stderr);
+  }
+
+  std::string getText(HWND hwnd) {
+    char buffer[200];
+    GetWindowText(hwnd, buffer, 200);
+    return buffer;
   }
 
 }

@@ -5,12 +5,12 @@
 namespace easywin {
 
   Panel::Panel(Panel&& src) noexcept : Component(std::move(src)) {
-    setComponent(hwnd, this);
+    SetWindowLongPtr(hwnd, 0, (LONG_PTR)this);
   }
 
   Panel& Panel::operator =(Panel&& src) noexcept {
     Component::operator =(std::move(src));
-    setComponent(hwnd, this);
+    SetWindowLongPtr(hwnd, 0, (LONG_PTR)this);
     return *this;
   }
 
