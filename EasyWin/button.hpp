@@ -4,20 +4,29 @@
 
 namespace easywin {
 
-  class Button : public Component {
-    
-    const char* className() const override;
-    unsigned long style() const override;
+  class ButtonManager : public Component {
 
   public:
+    std::function<void()> onClick;
 
-    std::function<void()> clickHandler;
+    ButtonManager(const char* text, Point position, Size size, HWND parent, long long id);
+  };
 
-    Button();
-    Button(std::function<void()> clickHandler)
-      : clickHandler{ std::move(clickHandler) } {
+
+  class ButtonRef : public ComponentRef {
+  public:
+    using component_type = ButtonManager;
+
+    ButtonRef() = default;
+    ButtonRef(component_type& component) : ComponentRef{ component } {
+    }
+
+    component_type& component() const {
+      return static_cast<ButtonManager&>(*_component);
     }
 
   };
+
+  static_assert(component_ref<ButtonRef>);
 
 }

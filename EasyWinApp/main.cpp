@@ -1,25 +1,15 @@
-#include <exception>
 #include "easywin.hpp"
-#include "win32dow.hpp"
-#include <iostream>
-
+using easywin::ButtonRef;
 using easywin::Canvas;
-using easywin::Panel;
-using easywin::Window;
 using easywin::Colors;
-using easywin::Button;
-
-class BluePanel : public Panel {
-public:
-
-  void onPaint(Canvas& canvas) override {
-    auto sz = clientSize();
-    canvas.drawRectangle({ 0, 0 }, { sz.width, sz.height }, 0, Colors::Blue);
-    canvas.drawText({ 2, 2 }, "Hello, world", Colors::Red, Colors::White);
-  }
-};
+using easywin::MainWindow;
+using easywin::Panel;
+using easywin::Size;
+using easywin::Point;
 
 class ManPanel : public Panel {
+
+  using Panel::Panel;
 
   void onPaint(Canvas& canvas) override {
     auto sz = clientSize();
@@ -35,60 +25,58 @@ class ManPanel : public Panel {
 
 };
 
-class MyWin : public Window {
+class MyWin : public MainWindow {
 public:
-  char title[80] = "My Title";
-    BluePanel blue;
+  using MainWindow::MainWindow;
 
-  void onCreate() override {
-    blue.create({ 200, 300 });
-
-    resizeContent({ 800, 600 });
-    //addChild({ 100, 100 }, std::move(blue));
-
-    //addChild(BluePanel{}, { 10, 10 }, { 100, 300 });
-    //addChild(ManPanel{}, { 200, 250 }, { 400, 600 });
-    //addChild(Button{}, { 300, 300 }, { 75, 25 }, "Click Me!");
-    //child<Button>(1).clickHandler =
-    //  []() {
-    //    MessageBox(NULL, "Thank you", "Error", MB_ICONERROR | MB_OK);
-    //  };
+  MyWin() : MainWindow("My Window") {
+    addChild<ManPanel>(Point{ 100, 100 }, Size{ 250, 600 });
   }
 
   void onPaint(Canvas& canvas) override {
     auto size = clientSize();
-    //canvas.drawRectangle({ 0, 0 }, { size.width, size.height }, Colors::White, Colors::White);
-    size = contentSize();
-    int width = size.width / 100 + (size.width % 100 ? 1 : 0);
-    int height = size.height / 100 + (size.height % 100 ? 1 : 0);
-    for (int i = 0; i < width; ++i) {
-      for (int j = 0; j < height; ++j) {
-        auto color =
-          ((i + j) % 2 == 0) ? Colors::White : Colors::Green;
-        canvas.drawRectangle({ 100*i, 100*j }, { 100*i + 101, 100*j + 101 }, Colors::Black, color);
-      }
-    }
-  }
-
-};
-
-class BallWin : public Window {
-  int x = 100, y = 100;
-public:
-
-  void onMouseMove(int x, int y) override {
-    this->x = x;
-    this->y = y;
-    requestRepaint();
-  }
-
-  void onPaint(Canvas& canvas) override {
-    canvas.drawEllipse({ x, y }, 100, Colors::Black, Colors::Red);
+    canvas.drawRectangle({ 0, 0 }, { size.width, size.height }, Colors::Black, Colors::Blue);
   }
 };
+
+void paintHandler(Canvas& canvas, int cx, int cy) {
+  canvas.drawEllipse({ cx, cy }, 50, Colors::Black, Colors::Blue);
+}
+
+void mouseMoveHandler(int mx, int my, int& cx, int& cy) {
+  cx = mx;
+  cy = my;
+}
+
+#include "statewin.hpp"
+
+static_assert(easywin::has_paint<int, int>);
+static_assert(easywin::has_mouse_move<int, int>);
+
+struct State {
+  int width, height;
+  double r, x, y, dx, dy;
+};
+
+void paintHandler(Canvas& canvas, State& state) {
+  canvas.drawEllipse({ (long)state.x, (long)state.y }, 20, Colors::Black, Colors::Blue);
+}
+
+static_assert(easywin::has_paint<State>);
 
 int main() {
-  easywin::allocateConsole();
-  MyWin window;
-  return window.run();
+  //MyWin window("Hello, world");
+  //window.addChild<Button>("Click Me", easywin::Point{ 100, 100 }, easywin::Size{ 75, 25 });
+  //window.addChild<ManPanel>(Point{ 100, 100 }, Size{ 250, 500 });
+  //window.addChild<ManPanel>(Point{ 400, 200 }, Size{ 250, 500 });
+  //easywin::StateWindow<int, int> window{ 200, 200 };
+  State state;
+  state.width = state.height = 0;
+  state.x = state.y = state.r = 20;
+  state.dx = 1;
+  state.dy = 2;
+
+  easywin::StateWindow<State> window{ state };
+  window.create("Something Cool");
+  window.run();
 }

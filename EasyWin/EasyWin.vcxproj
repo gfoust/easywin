@@ -147,6 +147,7 @@
     <ClInclude Include="easywin.hpp" />
     <ClInclude Include="gdi_canvas.hpp" />
     <ClInclude Include="panel.hpp" />
+    <ClInclude Include="panel2.hpp" />
     <ClInclude Include="util.hpp" />
     <ClInclude Include="win32dow.hpp" />
     <ClInclude Include="window.hpp" />

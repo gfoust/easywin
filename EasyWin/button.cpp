@@ -3,18 +3,8 @@
 
 namespace easywin {
 
-  static void noop() {
-  }
-
-  const char* Button::className() const {
-    return "button";
-  }
-
-  unsigned long Button::style() const {
-    return BS_PUSHBUTTON | WS_CHILDWINDOW | WS_VISIBLE;
-  }
-
-  Button::Button() : clickHandler{ noop } {
+  ButtonManager::ButtonManager(const char* text, Point position, Size size, HWND parent, long long id) {
+    create("button", text, BS_PUSHBUTTON | WS_CHILDWINDOW | WS_VISIBLE, position, size, parent, id);
   }
 
 }

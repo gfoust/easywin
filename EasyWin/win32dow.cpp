@@ -1,17 +1,14 @@
-#define _WIN32_WINNT 0x500
 #include "win32dow.hpp"
 #include "panel.hpp"
-#include "window.hpp"
-#include "button.hpp"
 #include "gdi_canvas.hpp"
-
 #include <windowsx.h>
 #include <stdexcept>
-#include <string>
-#include <strsafe.h>
 
-namespace easywin {
+namespace easywin::impl {
 
+ /*=========================================================
+  * Global variables
+  */
   HINSTANCE hInstance = GetModuleHandle(NULL);
 
   static const struct Extents {
@@ -39,20 +36,21 @@ namespace easywin {
 
   } extents;
 
+  /*=========================================================
+   * WndProc
+   */
+
   BOOL onCreate(HWND hwnd, LPCREATESTRUCT lpCreateStruct) {
-    Panel* panel = (Panel*)lpCreateStruct->lpCreateParams;
-    SetWindowLongPtr(hwnd, 0, (LONG_PTR)panel);
-    panel->hwnd = hwnd;
-    panel->onCreate();
+    //Panel* panel = (Panel*)lpCreateStruct->lpCreateParams;
+    //SetWindowLongPtr(hwnd, 0, (LONG_PTR)panel);
+    //panel->setHwnd(hwnd);
+    //panel->onCreate();
     return true;
   }
 
   void onDestroy(HWND hwnd) {
     Panel* panel = (Panel*)GetWindowLongPtr(hwnd, 0);
     panel->onDestroy();
-    if (dynamic_cast<Window*>(panel)) {
-      PostQuitMessage(0);
-    }
   }
 
   void onPaint(HWND hwnd) {
@@ -90,14 +88,14 @@ namespace easywin {
       si.cbSize = sizeof(SCROLLINFO);
       si.fMask = SIF_POS;
       GetScrollInfo(hwnd, SB_HORZ, &si);
-      xform.eDx = (float) -si.nPos;
+      xform.eDx = (float)-si.nPos;
     }
     if (GetWindowLong(hwnd, GWL_STYLE) & WS_VSCROLL) {
       SCROLLINFO si;
       si.cbSize = sizeof(SCROLLINFO);
       si.fMask = SIF_POS;
       GetScrollInfo(hwnd, SB_VERT, &si);
-      xform.eDy = (float) -si.nPos;
+      xform.eDy = (float)-si.nPos;
     }
     if (xform.eDx != 0 || xform.eDy != 0) {
       SetGraphicsMode(hdc, GM_ADVANCED);
@@ -126,7 +124,7 @@ namespace easywin {
     Panel* panel = (Panel*)GetWindowLongPtr(hwnd, 0);
 
     if (fDoubleClick) {
-      panel->onMouseButtonDoubleClick(x, y);
+      panel->onDoubleClick(x, y);
     }
     else {
       panel->onMouseButtonDown(x, y);
@@ -162,17 +160,17 @@ namespace easywin {
   void onCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify) {
     Panel* panel = (Panel*)GetWindowLongPtr(hwnd, 0);
 
-    if (hwndCtl == 0) {
-      if (codeNotify == 0) {
-        //window->menuSelect(id);
-      }
-    }
-    else {
-      Container* container;
-      if (codeNotify == BN_CLICKED && (container = dynamic_cast<Container*>(panel))) {
-        container->child<Button>(id - 1).clickHandler();
-      }
-    }
+    //if (hwndCtl == 0) {
+    //  if (codeNotify == 0) {
+    //    //window->menuSelect(id);
+    //  }
+    //}
+    //else {
+    //  Container* container;
+    //  if (codeNotify == BN_CLICKED && (container = dynamic_cast<Container*>(panel))) {
+    //    container->child<Button>(id - 1).clickHandler();
+    //  }
+    //}
   }
 
   void onSize(HWND hwnd, UINT state, int cx, int cy) {
@@ -271,6 +269,10 @@ namespace easywin {
     return DefWindowProc(hwnd, message, wParam, lParam);
   }
 
+  /*=========================================================
+   * Management functions
+   */
+
   void registerClass(const char* className) {
     WNDCLASS wndclass;
     memset(&wndclass, 0, sizeof(WNDCLASS));
@@ -279,7 +281,7 @@ namespace easywin {
       wndclass.style = CS_DBLCLKS | CS_HREDRAW | CS_VREDRAW;
       wndclass.lpfnWndProc = wndProc;
       wndclass.cbClsExtra = 0;
-      wndclass.cbWndExtra = sizeof(Window*);
+      wndclass.cbWndExtra = sizeof(Panel*);
       wndclass.hInstance = hInstance;
       wndclass.hIcon = NULL;
       wndclass.hCursor = LoadCursor(NULL, IDC_ARROW);
@@ -299,10 +301,9 @@ namespace easywin {
     int x, int y,
     int width, int height,
     HWND parent,
-    long long id,
-    LPVOID param
+    long long id
   ) {
-    HWND check = CreateWindow(
+    HWND hwnd = CreateWindow(
       className,            // window class name
       text,                 // window caption
       style,                // window style
@@ -313,35 +314,37 @@ namespace easywin {
       parent,               // parent window handle
       (HMENU)(long long)id, // window menu handle
       hInstance,            // program instance handle
-      param
+      NULL                  // param to WM_CREATE
     );
 
-    if (!check) {
-      LPVOID lpMsgBuf;
-      DWORD dw = GetLastError();
-
-      FormatMessage(
-        FORMAT_MESSAGE_ALLOCATE_BUFFER |
-        FORMAT_MESSAGE_FROM_SYSTEM |
-        FORMAT_MESSAGE_IGNORE_INSERTS,
-        NULL,
-        dw,
-        MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
-        (LPTSTR)&lpMsgBuf,
-        0, NULL);
-
-      // Display the error message and exit the process
-
-      LocalFree(lpMsgBuf);
-
+    if (!hwnd) {
+      throw std::runtime_error(std::string("Unable to create window ") + className);
     }
-    return check;
+
+    return hwnd;
   }
 
-  void setComponent(HWND hwnd, Panel* panel) {
-    if (hwnd && (WNDPROC)GetWindowLongPtr(hwnd, GWLP_WNDPROC) == wndProc) {
-      SetWindowLongPtr(hwnd, 0, (LONG_PTR)panel);
-    }
+  Size getClientSize(HWND hwnd) {
+    RECT client;
+    GetClientRect(hwnd, &client);
+    return { client.right, client.bottom };
+  }
+
+  Rect getClientRect(HWND hwnd) {
+    RECT client;
+    GetClientRect(hwnd, &client);
+    MapWindowPoints(HWND_DESKTOP, hwnd, (LPPOINT)&client, 2);
+    return { client.left, client.top, client.right, client.bottom };
+  }
+
+  std::string getWindowText(HWND hwnd) {
+    char cs[200];
+    GetWindowText(hwnd, cs, 200);
+    return cs;
+  }
+
+  void setWindowText(HWND hwnd, const char* text) {
+    SetWindowText(hwnd, text);
   }
 
   void setScrollSize(HWND hwnd, Size size) {
@@ -390,18 +393,26 @@ namespace easywin {
     InvalidateRect(hwnd, NULL, true);
   }
 
-  void allocateConsole() {
-    AllocConsole();
-    FILE* oldin, * oldout, * olderr;
-    freopen_s(&oldin, "CONIN$", "r", stdin);
-    freopen_s(&oldout, "CONOUT$", "w", stdout);
-    freopen_s(&olderr, "CONOUT$", "w", stderr);
-  }
+  int runWindow(HWND hwnd) {
+    try {
+      if (hwnd != NULL) {
+        ShowWindow(hwnd, SW_SHOWNORMAL);
 
-  std::string getText(HWND hwnd) {
-    char buffer[200];
-    GetWindowText(hwnd, buffer, 200);
-    return buffer;
+        MSG msg;
+        while (GetMessage(&msg, NULL, 0, 0)) {
+          TranslateMessage(&msg);
+          DispatchMessage(&msg);
+        }
+        return (int)msg.wParam;
+      }
+      else {
+        return -1;
+      }
+    }
+    catch (std::exception& e) {
+      MessageBox(NULL, e.what(), "Error", MB_ICONERROR | MB_OK);
+      return -1;
+    }
   }
 
 }
@@ -409,6 +420,6 @@ namespace easywin {
 int main();
 
 int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ PSTR szCmdLine, _In_ int iCmdShow) {
-  easywin::hInstance = hInstance;
+  easywin::impl::hInstance = hInstance;
   return main();
 }

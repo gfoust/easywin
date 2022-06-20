@@ -1,30 +1,41 @@
 #pragma once
-#undef UNICODE
-#include <windows.h>
-#include <string>
-#include <typeinfo>
-#include <vector>
 #include "container.hpp"
 
 namespace easywin {
 
   class Window : public Container {
-
-  protected:
-    void addMenu(std::string name);
-    void addMenuItem(int menuPos, std::string name, int id);
-    unsigned long style() const override;
-
   public:
-    void create(const char* title = "EasyWin Application");
-    inline void create(const std::string& title) {
-      create(title.data());
-    }
-    int run();
-    std::string getTitle();
-    void setTitle(const std::string& title);
+    Window() = default;
 
+    Window(const char* title) {
+      create(title);
+    }
+
+    void create(const char* title);
   };
 
-}  // namespace easywin
+  class MainWindow : public Window {
+  public:
+    using Window::Window;
 
+    void onDestroy() override;
+    void run();
+  };
+
+  class WindowRef : public ContainerRef {
+  public:
+    using component_type = Window;
+
+    WindowRef() = default;
+
+    WindowRef(component_type& window) : ContainerRef{ window } {
+    }
+
+    component_type& component() const {
+      return static_cast<Window&>(*_component);
+    }
+  };
+
+  static_assert(component_ref<WindowRef>);
+
+}

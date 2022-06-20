@@ -10,4 +10,7 @@ namespace easywin {
     long width, height;
   };
 
+  struct Rect {
+    long left, top, right, bottom;
+  };
 }

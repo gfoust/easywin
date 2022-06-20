@@ -68,5 +68,8 @@
     <ClInclude Include="easywin.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="panel2.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

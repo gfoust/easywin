@@ -1,49 +1,65 @@
 #pragma once
 #include "panel.hpp"
-#include <concepts>
 #include <memory>
+#include <concepts>
 #include <utility>
 
 namespace easywin {
 
   class Container : public Panel {
-  protected:
-    std::vector<std::unique_ptr<Component>> children;
-
-    void addChild(Point position, std::unique_ptr<Component> child);
-
   public:
+    using Panel::Panel;
 
-    // Child accessors
-
-    template <typename ComponentT = Component>
-      requires std::derived_from<ComponentT, Component>
-    ComponentT& child(size_t i) {
-      return dynamic_cast<ComponentT&>(*children.at(i));
+    template <std::derived_from<Component> ComponentT, typename... Args>
+      requires std::constructible_from<ComponentT, Args..., HWND, long long>
+    ComponentT& addChild(Args&&... args) {
+      return static_cast<ComponentT&>(addChild(
+        std::make_unique<ComponentT>(std::forward<Args>(args)..., _hwnd, (long long)_children.size() + 1)
+      ));
     }
 
-    template <typename ComponentT = Component>
-      requires std::derived_from<ComponentT, Component>
-    const ComponentT& child(size_t i) const {
-      return dynamic_cast<const ComponentT&>(*children.at(i));
+    template <component_ref RefT, typename... Args>
+      requires std::constructible_from<typename RefT::Manager, Args..., HWND, long long>
+    typename RefT::Manager& addChild(Args&&... args) {
+      return addChild(
+        std::make_unique<typename RefT::Manager>(std::forward<Args>(args)..., _hwnd, (long long)_children.size() + 1)
+      );
     }
 
-    template <typename ComponentT>
-      requires std::derived_from<ComponentT, Component>
-    void addChild(Point position, ComponentT child) {
-      addChild(position, std::make_unique<ComponentT>(std::move(child)));
+  protected:
+    std::vector<std::unique_ptr<Component>> _children;
+
+    Component& addChild(std::unique_ptr<Component> child);
+  };
+
+
+
+  class ContainerRef : public PanelRef {
+  public:
+    using component_type = Container;
+
+    ContainerRef() = default;
+
+    ContainerRef(component_type& container) : PanelRef{ container } {
     }
 
-    template <typename ComponentT, typename... Args>
-      requires std::derived_from<ComponentT, Component> 
-    void addChild(Point position, Args... args) {
-      addChild(position, std::make_unique<ComponentT>(std::forward(args...)));
+    component_type& component() const {
+      return static_cast<Container&>(*_component);
     }
 
-    template <typename ComponentT>
-      requires std::derived_from<ComponentT, Component>
-    inline void addChild(ComponentT child, Point position, Size size, const std::string& text) {
-      addChild(child, position, size, text.data());
+    template <std::derived_from<Component> ComponentT, typename... Args>
+      requires std::constructible_from<ComponentT, Args..., HWND, long long>
+    ComponentT& addChild(Args&&... args) {
+      return component().addChild<ComponentT, Args...>(std::forward(args));
+    }
+
+    template <component_ref RefT, typename... Args>
+      requires std::constructible_from<typename RefT::Manager, Args..., HWND, long long>
+    typename RefT::Manager& addChild(Args&&... args) {
+      return component().addChild<typename RefT::Manager, Args...>(std::forward(args));
     }
   };
+
+  static_assert(component_ref<ContainerRef>);
+
 }
