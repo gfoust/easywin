@@ -40,11 +40,16 @@ namespace easywin::impl {
     PostQuitMessage(0);
   }
 
+  inline
+  void setWindowText(HWND hwnd, const char* text) {
+    SetWindowText(hwnd, text);
+  }
+
   Size getClientSize(HWND hwnd);
   Rect getClientRect(HWND hwnd);
   std::string getWindowText(HWND hwnd);
-  void setWindowText(HWND hwnd, const char* text);
   void setScrollSize(HWND hwnd, Size size);
-
   int runWindow(HWND hwnd);
+  size_t startTimer(HWND hwnd, long elapseMs);
+  void stopTimer(HWND hwnd);
 }

@@ -6,34 +6,123 @@
 
 namespace easywin {
 
+  /*--------------------------------------------------------
+   * Create
+   */
+  template <typename... StateTs>
+  concept has_basic_create = requires {
+    createHandler(std::declval<StateTs&>()...);
+  };
+
+  template <typename PanelT, typename... StateTs>
+  concept has_extended_create =
+    std::derived_from<PanelT, Panel> &&
+    requires(PanelT& panel) {
+      createHandler(panel, std::declval<StateTs&>()...);
+    };
+
+  template <typename... Args>
+  concept has_create = has_basic_create<Args...> || has_extended_create<Args...>;
+
+
+  /*--------------------------------------------------------
+   * Paint
+   */
   template <typename... StateTs>
   concept has_basic_paint = requires(Canvas& canvas) {
     paintHandler(canvas, std::declval<StateTs&>()...);
   };
 
+  template <typename PanelT, typename... StateTs>
+  concept has_extended_paint = 
+    std::derived_from<PanelT, Panel> && 
+    requires(PanelT& panel, Canvas& canvas) {
+      paintHandler(panel, canvas, std::declval<StateTs&>()...);
+    };
+
+  template <typename... Args>
+  concept has_paint = has_basic_paint<Args...> || has_extended_paint<Args...>;
+
+
+  /*--------------------------------------------------------
+   * Resize
+   */
   template <typename... StateTs>
-  concept has_extended_paint = requires(Panel& panel, Canvas& canvas) {
-    paintHandler(panel, canvas, std::declval<StateTs&>()...);
+  concept has_basic_resize = requires {
+    resizeHandler(0, 0, std::declval<StateTs&>()...);
   };
 
-  template <typename... StateTs>
-  concept has_paint = has_basic_paint<StateTs...> || has_extended_paint<StateTs...>;
+  template <typename PanelT, typename... StateTs>
+  concept has_extended_resize =
+    std::derived_from<PanelT, Panel> &&
+    requires(PanelT & panel) {
+      paintHandler(panel, 0, 0, std::declval<StateTs&>()...);
+    };
+
+  template <typename... Args>
+  concept has_resize = has_basic_resize<Args...> || has_extended_resize<Args...>;
 
 
+  /*--------------------------------------------------------
+   * MouseMove
+   */
   template <typename... StateTs>
   concept has_basic_mouse_move = requires(int x, int y) {
     mouseMoveHandler(x, y, std::declval<StateTs&>()...);
   };
 
+  template <typename PanelT, typename... StateTs>
+  concept has_extended_mouse_move = 
+    std::derived_from<PanelT, Panel> &&
+    requires(PanelT& panel, int x, int y) {
+      mouseMoveHandler(panel, x, y, std::declval<StateTs&>()...);
+    };
+
+  template <typename... Args>
+  concept has_mouse_move = has_basic_mouse_move<Args...> || has_extended_mouse_move<Args...>;
+
+
+  /*--------------------------------------------------------
+   * Click
+   */
   template <typename... StateTs>
-  concept has_extended_mouse_move = requires(Panel panel, int x, int y) {
-    mouseMoveHandler(panel, x, y, std::declval<StateTs&>()...);
+  concept has_basic_click = requires(int x, int y) {
+    clickHandler(x, y, std::declval<StateTs&>()...);
   };
 
-  template <typename...StateTs>
-  concept has_mouse_move = has_basic_mouse_move<StateTs...> || has_extended_mouse_move<StateTs...>;
+  template <typename PanelT, typename... StateTs>
+  concept has_extended_click =
+    std::derived_from<PanelT, Panel> &&
+    requires(PanelT & panel, int x, int y) {
+    clickHandler(panel, x, y, std::declval<StateTs&>()...);
+  };
+
+  template <typename... Args>
+  concept has_click = has_basic_click<Args...> || has_extended_click<Args...>;
 
 
+  /*--------------------------------------------------------
+   * Timer
+   */
+  template <typename... StateTs>
+  concept has_basic_timer = requires {
+    timerHandler(0, std::declval<StateTs&>()...);
+  };
+
+  template <typename PanelT, typename... StateTs>
+  concept has_extended_timer =
+    std::derived_from<PanelT, Panel> &&
+    requires(PanelT & panel) {
+      timerHandler(panel, 0, std::declval<StateTs&>()...);
+    };
+
+  template <typename... Args>
+  concept has_timer = has_basic_timer<Args...> || has_extended_timer<Args...>;
+
+
+  /*========================================================
+   * StateComponent
+   */
   template <std::derived_from<Panel> PanelT, typename... StateTs>
   class StateComponent : public PanelT {
     std::tuple<StateTs...> states;
@@ -43,8 +132,27 @@ namespace easywin {
       : states{ std::forward<StateTs>(states)... } {
     }
 
-    void onPaint(Canvas& canvas) {
-      if constexpr (has_extended_paint<StateTs...>) {
+    void onCreate() override {
+      if constexpr (has_extended_create<PanelT, StateTs...>) {
+        std::apply(
+          [&](StateTs&... states) {
+            createHandler(*this, states...);
+          }, states
+        );
+      }
+      else if constexpr (has_basic_create<StateTs...>) {
+        std::apply(
+          [&](StateTs&... states) {
+            createHandler(states...);
+          }, states
+        );
+      }
+    }
+
+
+    void onPaint(Canvas& canvas) override {
+      PanelT::onPaint(canvas);
+      if constexpr (has_extended_paint<PanelT, StateTs...>) {
         std::apply(
           [&](StateTs&... states) {
             paintHandler(*this, canvas, states...);
@@ -60,8 +168,28 @@ namespace easywin {
       }
     }
 
-    void onMouseMove(int x, int y) {
-      if constexpr (has_extended_mouse_move<StateTs...>) {
+    void onResize(int width, int height) override {
+      PanelT::onResize(width, height);
+      if constexpr (has_extended_resize<PanelT, StateTs...>) {
+        std::apply(
+          [&](StateTs&... states) {
+            resizeHandler(*this, width, height, states...);
+          }, states
+        );
+        this->requestRepaint();
+      }
+      else if constexpr (has_basic_resize<StateTs...>) {
+        std::apply(
+          [&](StateTs&... states) {
+            resizeHandler(width, height, states...);
+          }, states
+        );
+        this->requestRepaint();
+      }
+    }
+
+    void onMouseMove(int x, int y) override {
+      if constexpr (has_extended_mouse_move<PanelT, StateTs...>) {
         std::apply(
           [&](StateTs&... states) {
             mouseMoveHandler(*this, x, y, states...);
@@ -78,8 +206,72 @@ namespace easywin {
         this->requestRepaint();
       }
     }
+
+    void onClick(int x, int y) override {
+      if constexpr (has_extended_click<PanelT, StateTs...>) {
+        std::apply(
+          [&](StateTs&... states) {
+            clickHandler(*this, x, y, states...);
+          }, states
+        );
+        this->requestRepaint();
+      }
+      else if constexpr (has_basic_click<StateTs...>) {
+        std::apply(
+          [&](StateTs&... states) {
+            clickHandler(x, y, states...);
+          }, states
+        );
+        this->requestRepaint();
+      }
+    }
+
+    void onTimer(long elapsedMs) override {
+      if constexpr (has_extended_timer<PanelT, StateTs...>) {
+        std::apply(
+          [&](StateTs&... states) {
+            timerHandler(*this, elapsedMs, states...);
+          }, states
+        );
+        this->requestRepaint();
+      }
+      else if constexpr (has_basic_timer<StateTs...>) {
+        std::apply(
+          [&](StateTs&... states) {
+            timerHandler(elapsedMs, states...);
+          }, states
+        );
+        this->requestRepaint();
+      }
+    }
   };
 
   template <typename... StateTs>
+  using StatePanel = StateComponent<Panel, StateTs...>;
+
+  template <typename... StateTs>
   using StateWindow = StateComponent<MainWindow, StateTs...>;
+
+  extern MainWindow* mainWindow = nullptr;
+
+  template <typename... StateTs>
+  void runWindow(const char* title, StateTs&&... states) {
+    if (mainWindow == nullptr) {
+      mainWindow = new StateComponent<MainWindow, StateTs...>(std::forward<StateTs>(states)...);
+      mainWindow->create(title);
+      mainWindow->run();
+      delete mainWindow;
+      mainWindow = nullptr;
+    }
+  }
+
+  template <typename... StateTs>
+  void runWindow(const std::string& title, StateTs&&... states) {
+    runWindow(title.data(), std::forward<StateTs>(states)...);
+  }
+
+  inline
+  void startWindowTimer(long elapseMs) {
+    mainWindow->startTimer(elapseMs);
+  }
 }

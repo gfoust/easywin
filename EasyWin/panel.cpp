@@ -68,6 +68,9 @@ namespace easywin {
   void Panel::onMouseWheel(int x, int y, bool up) {
   }
 
+  void Panel::onTimer(long ellapsedMs) {
+  }
+
   void Panel::onDestroy() {
   }
 
@@ -87,6 +90,14 @@ namespace easywin {
     Component::create(className, text, style, position, size, parent, id);
     impl::setPanel(_hwnd, *this);
     onCreate();
+  }
+
+   void Panel::startTimer(long elapseMs) {
+    impl::startTimer(_hwnd, elapseMs);
+  }
+
+  void Panel::stopTimer() {
+    impl::stopTimer(_hwnd);
   }
 
 }

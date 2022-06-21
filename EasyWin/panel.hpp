@@ -23,6 +23,8 @@ namespace easywin {
     void requestRepaint();
     Size contentSize() const;
     void resizeContent(Size size);
+    void startTimer(long elapseMs);
+    void stopTimer();
 
     virtual void onCreate();
     virtual void onPaint(Canvas& canvas);
@@ -33,6 +35,7 @@ namespace easywin {
     virtual void onClick(int x, int y);
     virtual void onDoubleClick(int x, int y);
     virtual void onMouseWheel(int x, int y, bool up);
+    virtual void onTimer(long ellapsedMs);
     virtual void onDestroy();
 
   protected:

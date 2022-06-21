@@ -3,6 +3,8 @@
 #include "gdi_canvas.hpp"
 #include <windowsx.h>
 #include <stdexcept>
+#include <vector>
+#include <chrono>
 
 namespace easywin::impl {
 
@@ -71,9 +73,9 @@ namespace easywin::impl {
 
     SelectObject(hdc, GetStockObject(DC_PEN));
     SelectObject(hdc, GetStockObject(DC_BRUSH));
-    SetDCPenColor(hdc, 0xaaaaaa);
-    SetDCBrushColor(hdc, 0xaaaaaa);
-    Rectangle(hdc, 0, 0, client.right + 1, client.bottom + 1);
+    //SetDCPenColor(hdc, 0xaaaaaa);
+    //SetDCBrushColor(hdc, 0xaaaaaa);
+    //Rectangle(hdc, 0, 0, client.right + 1, client.bottom + 1);
 
     XFORM xform;
     xform.eM11 = 1.0;
@@ -120,15 +122,12 @@ namespace easywin::impl {
     DeleteDC(hdc);
   }
 
+  static bool isDoubleClick;
   void onLButtonDown(HWND hwnd, BOOL fDoubleClick, int x, int y, UINT keyFlags) {
     Panel* panel = (Panel*)GetWindowLongPtr(hwnd, 0);
 
-    if (fDoubleClick) {
-      panel->onDoubleClick(x, y);
-    }
-    else {
-      panel->onMouseButtonDown(x, y);
-    }
+    isDoubleClick = fDoubleClick;
+    panel->onMouseButtonDown(x, y);
 
     SetCapture(hwnd);
   }
@@ -143,6 +142,17 @@ namespace easywin::impl {
     Panel* panel = (Panel*)GetWindowLongPtr(hwnd, 0);
 
     panel->onMouseButtonUp(x, y);
+
+    RECT client;
+    GetClientRect(hwnd, &client);
+    if (x >= client.left && x < client.right && y >= client.top && y < client.bottom) {
+      if (isDoubleClick) {
+        panel->onDoubleClick(x, y);
+      }
+      else {
+        panel->onClick(x, y);
+      }
+    }
 
     ReleaseCapture();
   }
@@ -248,6 +258,21 @@ namespace easywin::impl {
     }
   }
 
+  struct Timer { 
+    HWND hwnd;
+    std::chrono::high_resolution_clock::time_point timestamp; 
+  };
+  static std::vector<Timer> timers;
+
+  void onTimer(HWND hwnd, UINT_PTR id) {
+    Panel* panel = (Panel*)GetWindowLongPtr(hwnd, 0);
+    auto now = std::chrono::high_resolution_clock::now();
+    Timer& timer = timers[id - 1];
+    long elapsedMs = std::chrono::duration_cast<std::chrono::milliseconds>(now - timer.timestamp).count();
+    timer.timestamp = now;
+    panel->onTimer(elapsedMs);
+  }
+
   LRESULT CALLBACK wndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam) {
     switch (message) {
       HANDLE_MSG(hwnd, WM_CREATE, onCreate);
@@ -262,6 +287,7 @@ namespace easywin::impl {
       HANDLE_MSG(hwnd, WM_SIZE, onSize);
       HANDLE_MSG(hwnd, WM_HSCROLL, onHScroll);
       HANDLE_MSG(hwnd, WM_VSCROLL, onVScroll);
+      HANDLE_MSG(hwnd, WM_TIMER, onTimer);
     case WM_ERASEBKGND:
       return 1;
     }
@@ -343,10 +369,6 @@ namespace easywin::impl {
     return cs;
   }
 
-  void setWindowText(HWND hwnd, const char* text) {
-    SetWindowText(hwnd, text);
-  }
-
   void setScrollSize(HWND hwnd, Size size) {
     RECT client;
     GetClientRect(hwnd, &client);
@@ -412,6 +434,36 @@ namespace easywin::impl {
     catch (std::exception& e) {
       MessageBox(NULL, e.what(), "Error", MB_ICONERROR | MB_OK);
       return -1;
+    }
+  }
+
+  size_t startTimer(HWND hwnd, long elapseMs) {
+    size_t id = 0;
+    for (size_t i = 0; i < timers.size(); ++i) {
+      if (timers[i].hwnd == hwnd) {
+        timers[i].timestamp = std::chrono::high_resolution_clock::now();
+        id = i + 1;
+        break;
+      }
+    }
+    if (id == 0) {
+      timers.push_back({ hwnd, std::chrono::high_resolution_clock::now() });
+      id = timers.size();
+    }
+
+    SetTimer(hwnd, id, elapseMs, NULL);
+    return timers.size();
+  }
+
+  void stopTimer(HWND hwnd) {
+    size_t id = 0;
+    for (size_t i = 0; i < timers.size(); ++i) {
+      if (timers[i].hwnd == hwnd) {
+        id = i + 1;
+      }
+    }
+    if (id > 0) {
+      KillTimer(hwnd, id);
     }
   }
 

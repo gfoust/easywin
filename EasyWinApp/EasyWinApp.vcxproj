@@ -142,6 +142,12 @@
       <Project>{c05ae307-8948-43f3-a4c6-7490995e9484}</Project>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="bounce.hpp" />
+    <ClInclude Include="click.hpp" />
+    <ClInclude Include="follow.hpp" />
+    <ClInclude Include="mywin.hpp" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
