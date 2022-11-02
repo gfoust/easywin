@@ -17,6 +17,7 @@ namespace easywin {
     static constexpr Color Gray = rgb(127, 127, 127);
     static constexpr Color Red = rgb(204, 0, 0);
     static constexpr Color Orange = rgb(221, 127, 0);
+    static constexpr Color Brown = rgb(127, 63, 0);
     static constexpr Color Yellow = rgb(238, 238, 0);
     static constexpr Color Green = rgb(0, 204, 0);
     static constexpr Color Cyan = rgb(0, 204, 204);

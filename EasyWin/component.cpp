@@ -25,6 +25,10 @@ namespace easywin {
     return impl::getClientRect(_hwnd);
   }
 
+  void Component::move(Rect client) {
+    impl::moveWindow(_hwnd, client);
+  }
+
   std::string Component::text() const {
     return impl::getWindowText(_hwnd);
   }
@@ -71,7 +75,8 @@ namespace easywin {
       size.width,           // initial x size
       size.height,          // initial y size
       parent,               // parent window handle
-      (long long)id         // window menu handle
+      (long long)id,        // window menu handle
+      this
     );
   }
 

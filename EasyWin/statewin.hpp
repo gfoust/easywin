@@ -83,6 +83,44 @@ namespace easywin {
 
 
   /*--------------------------------------------------------
+   * MouseDown
+   */
+  template <typename... StateTs>
+  concept has_basic_mouse_button_down = requires(int x, int y) {
+    mouseButtonDownHandler(x, y, std::declval<StateTs&>()...);
+  };
+
+  template <typename PanelT, typename... StateTs>
+  concept has_extended_mouse_button_down =
+    std::derived_from<PanelT, Panel> &&
+    requires(PanelT & panel, int x, int y) {
+      mouseButtonDownHandler(panel, x, y, std::declval<StateTs&>()...);
+    };
+
+  template <typename... Args>
+  concept has_mouse_button_down = has_basic_mouse_button_down<Args...> || has_extended_mouse_button_down<Args...>;
+
+
+  /*--------------------------------------------------------
+   * MouseUp
+   */
+  template <typename... StateTs>
+  concept has_basic_mouse_button_up = requires(int x, int y) {
+    mouseButtonUpHandler(x, y, std::declval<StateTs&>()...);
+  };
+
+  template <typename PanelT, typename... StateTs>
+  concept has_extended_mouse_button_up =
+    std::derived_from<PanelT, Panel> &&
+    requires(PanelT & panel, int x, int y) {
+      mouseButtonUpHandler(panel, x, y, std::declval<StateTs&>()...);
+    };
+
+  template <typename... Args>
+  concept has_mouse_button_up = has_basic_mouse_button_up<Args...> || has_extended_mouse_button_up<Args...>;
+
+
+  /*--------------------------------------------------------
    * Click
    */
   template <typename... StateTs>
@@ -99,6 +137,25 @@ namespace easywin {
 
   template <typename... Args>
   concept has_click = has_basic_click<Args...> || has_extended_click<Args...>;
+
+
+  /*--------------------------------------------------------
+   * DoubleClick
+   */
+  template <typename... StateTs>
+  concept has_basic_double_click = requires(int x, int y) {
+    doubleClickHandler(x, y, std::declval<StateTs&>()...);
+  };
+
+  template <typename PanelT, typename... StateTs>
+  concept has_extended_double_click =
+    std::derived_from<PanelT, Panel> &&
+    requires(PanelT & panel, int x, int y) {
+    doubleClickHandler(panel, x, y, std::declval<StateTs&>()...);
+  };
+
+  template <typename... Args>
+  concept has_double_click = has_basic_double_click<Args...> || has_extended_double_click<Args...>;
 
 
   /*--------------------------------------------------------
@@ -207,6 +264,44 @@ namespace easywin {
       }
     }
 
+    void onMouseButtonDown(int x, int y) override {
+      if constexpr (has_extended_mouse_button_down<PanelT, StateTs...>) {
+        std::apply(
+          [&](StateTs&... states) {
+            mouseButtonDownHandler(*this, x, y, states...);
+          }, states
+        );
+        this->requestRepaint();
+      }
+      else if constexpr (has_basic_mouse_button_down<StateTs...>) {
+        std::apply(
+          [&](StateTs&... states) {
+            mouseButtonDownHandler(x, y, states...);
+          }, states
+        );
+        this->requestRepaint();
+      }
+    }
+
+    void onMouseButtonUp(int x, int y) override {
+      if constexpr (has_extended_mouse_button_up<PanelT, StateTs...>) {
+        std::apply(
+          [&](StateTs&... states) {
+            mouseButtonUpHandler(*this, x, y, states...);
+          }, states
+        );
+        this->requestRepaint();
+      }
+      else if constexpr (has_basic_mouse_button_up<StateTs...>) {
+        std::apply(
+          [&](StateTs&... states) {
+            mouseButtonUpHandler(x, y, states...);
+          }, states
+        );
+        this->requestRepaint();
+      }
+    }
+
     void onClick(int x, int y) override {
       if constexpr (has_extended_click<PanelT, StateTs...>) {
         std::apply(
@@ -220,6 +315,25 @@ namespace easywin {
         std::apply(
           [&](StateTs&... states) {
             clickHandler(x, y, states...);
+          }, states
+        );
+        this->requestRepaint();
+      }
+    }
+
+    void onDoubleClick(int x, int y) override {
+      if constexpr (has_extended_double_click<PanelT, StateTs...>) {
+        std::apply(
+          [&](StateTs&... states) {
+            doubleClickHandler(*this, x, y, states...);
+          }, states
+        );
+        this->requestRepaint();
+      }
+      else if constexpr (has_basic_double_click<StateTs...>) {
+        std::apply(
+          [&](StateTs&... states) {
+            doubleClickHandler(x, y, states...);
           }, states
         );
         this->requestRepaint();

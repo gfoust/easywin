@@ -10,17 +10,15 @@ namespace easywin {
   public:
 
     Panel() = default;
-    Panel(Point position, Size size, HWND parent, long long id) {
-      create(position, size, parent, id);
-    }
-    void create(Point position, Size size, HWND parent, long long id);
 
     Panel(Panel&& src) noexcept;
     Panel& operator =(Panel&& src) noexcept;
 
     void setHwnd(HWND hwnd) override;
 
+    void create(Point position, Size size, HWND parent, long long id);
     void requestRepaint();
+    bool contentSizeFixed() const { return (bool)content; }
     Size contentSize() const;
     void resizeContent(Size size);
     void startTimer(long elapseMs);

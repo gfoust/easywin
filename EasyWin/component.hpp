@@ -23,6 +23,7 @@ namespace easywin {
 
     Size clientSize() const;
     Rect clientRect() const;
+    void move(Rect client);
     std::string text() const;
     void setText(const char* text);
     void setText(const std::string& text) {
@@ -88,4 +89,12 @@ namespace easywin {
     std::constructible_from<RefT, typename RefT::component_type&> &&
     std::same_as<typename RefT::component_type&, decltype(std::declval<RefT>().component())>;
   static_assert(component_ref<ComponentRef>);
+
+
+  template <typename ComponentT, typename... Args>
+  concept component_created_from =
+    std::derived_from<ComponentT, Component> &&
+    requires (ComponentT component) {
+      component.create(std::declval<Args>()..., HWND{}, 0);
+    };
 }

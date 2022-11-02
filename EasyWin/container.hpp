@@ -1,33 +1,57 @@
 #pragma once
 #include "panel.hpp"
-#include <memory>
 #include <concepts>
+#include <memory>
+#include <optional>
 #include <utility>
+#include <variant>
 
 namespace easywin {
+
+  struct NoAnchor {
+  } const noAnchor;
 
   class Container : public Panel {
   public:
     using Panel::Panel;
 
-    template <std::derived_from<Component> ComponentT, typename... Args>
-      requires std::constructible_from<ComponentT, Args..., HWND, long long>
+    template <typename ComponentT, typename... Args>
+      requires component_created_from<ComponentT, Args...>
     ComponentT& addChild(Args&&... args) {
-      return static_cast<ComponentT&>(addChild(
-        std::make_unique<ComponentT>(std::forward<Args>(args)..., _hwnd, (long long)_children.size() + 1)
-      ));
+      auto component = std::make_unique<ComponentT>();
+      component->create(std::forward<Args>(args)..., _hwnd, (long long)_children.size() + 1);
+      return static_cast<ComponentT&>(addChild(std::move(component)));
     }
 
-    template <component_ref RefT, typename... Args>
-      requires std::constructible_from<typename RefT::Manager, Args..., HWND, long long>
-    typename RefT::Manager& addChild(Args&&... args) {
-      return addChild(
-        std::make_unique<typename RefT::Manager>(std::forward<Args>(args)..., _hwnd, (long long)_children.size() + 1)
-      );
+    void anchor(
+      const Component& child, 
+      std::variant<NoAnchor, int> left,
+      std::variant<NoAnchor, int> top,
+      std::variant<NoAnchor, int> right,
+      std::variant<NoAnchor, int> bottom
+    );
+
+    Component& operator[](std::size_t i) {
+      return *_children.at(i).child;
     }
+
+    const Component& operator[](std::size_t i) const {
+      return *_children.at(i).child;
+    }
+
+    void onResize(int width, int height) override;
 
   protected:
-    std::vector<std::unique_ptr<Component>> _children;
+    struct AnchorPoints {
+      std::optional<int> left, top, right, bottom;
+    };
+
+    struct ChildRec {
+      std::unique_ptr<Component> child;
+      AnchorPoints anchors;
+    };
+
+    std::vector<ChildRec> _children;
 
     Component& addChild(std::unique_ptr<Component> child);
   };

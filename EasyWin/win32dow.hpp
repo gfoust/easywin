@@ -17,7 +17,8 @@ namespace easywin::impl {
     int x, int y,
     int width, int height,
     HWND parent,
-    long long id
+    long long id,
+    Component* component
   );
 
   inline
@@ -43,6 +44,11 @@ namespace easywin::impl {
   inline
   void setWindowText(HWND hwnd, const char* text) {
     SetWindowText(hwnd, text);
+  }
+
+  inline
+  void moveWindow(HWND hwnd, Rect rect) {
+    MoveWindow(hwnd, rect.left, rect.top, rect.right - rect.left, rect.bottom - rect.top, true);
   }
 
   Size getClientSize(HWND hwnd);

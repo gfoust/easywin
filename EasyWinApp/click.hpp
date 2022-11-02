@@ -5,6 +5,7 @@
 using Points = std::vector<easywin::Point>;
 
 struct PointsState {
+  bool dragging = false;
   Points points;
 };
 
@@ -14,7 +15,27 @@ void paintHandler(easywin::Canvas& canvas, PointsState& state) {
   }
 }
 
-void clickHandler(int x, int y, PointsState& state) {
-  state.points.push_back({ x, y });
+void createHandler(PointsState& state) {
+  state.points.push_back({ 0, 0 });
 }
 
+//void mouseButtonDownHandler(int x, int y, PointsState& state) {
+//  state.dragging = true;
+//  state.points.push_back({ x, y });
+//}
+//
+//void mouseButtonUpHandler(int x, int y, PointsState& state) {
+//  state.dragging = false;
+//}
+
+void mouseMoveHandler(int x, int y, PointsState& state) {
+  state.points.back() = { x, y };
+}
+
+//void clickHandler(int x, int y, PointsState& state) {
+//  state.points.push_back({ x, y });
+//}
+
+void doubleClickHandler(int x, int y, PointsState& state) {
+  state.points.push_back({ x, y });
+}

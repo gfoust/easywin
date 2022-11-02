@@ -43,7 +43,10 @@ namespace easywin {
 
   void Panel::onPaint(Canvas& canvas) {
     auto client = clientSize();
-    canvas.drawRectangle({ 0, 0 }, { client.width, client.height }, 0xffffff, 0xffffff);
+    auto content = contentSize();
+    auto width = client.width < content.width ? content.width : client.width;
+    auto height = client.height < content.height ? content.height : client.height;
+    canvas.drawRectangle({ 0, 0 }, { width, height }, 0xffffff, 0xffffff);
   }
 
   void Panel::onResize(int width, int height) {

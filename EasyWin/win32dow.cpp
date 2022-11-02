@@ -43,10 +43,10 @@ namespace easywin::impl {
    */
 
   BOOL onCreate(HWND hwnd, LPCREATESTRUCT lpCreateStruct) {
-    //Panel* panel = (Panel*)lpCreateStruct->lpCreateParams;
-    //SetWindowLongPtr(hwnd, 0, (LONG_PTR)panel);
-    //panel->setHwnd(hwnd);
-    //panel->onCreate();
+    Panel* panel = (Panel*)lpCreateStruct->lpCreateParams;
+    SetWindowLongPtr(hwnd, 0, (LONG_PTR)panel);
+    panel->setHwnd(hwnd);
+    panel->onCreate();
     return true;
   }
 
@@ -268,7 +268,7 @@ namespace easywin::impl {
     Panel* panel = (Panel*)GetWindowLongPtr(hwnd, 0);
     auto now = std::chrono::high_resolution_clock::now();
     Timer& timer = timers[id - 1];
-    long elapsedMs = std::chrono::duration_cast<std::chrono::milliseconds>(now - timer.timestamp).count();
+    long elapsedMs = (long)std::chrono::duration_cast<std::chrono::milliseconds>(now - timer.timestamp).count();
     timer.timestamp = now;
     panel->onTimer(elapsedMs);
   }
@@ -327,7 +327,8 @@ namespace easywin::impl {
     int x, int y,
     int width, int height,
     HWND parent,
-    long long id
+    long long id,
+    Component* component
   ) {
     HWND hwnd = CreateWindow(
       className,            // window class name
@@ -340,7 +341,7 @@ namespace easywin::impl {
       parent,               // parent window handle
       (HMENU)(long long)id, // window menu handle
       hInstance,            // program instance handle
-      NULL                  // param to WM_CREATE
+      component             // param to WM_CREATE
     );
 
     if (!hwnd) {
@@ -359,7 +360,7 @@ namespace easywin::impl {
   Rect getClientRect(HWND hwnd) {
     RECT client;
     GetClientRect(hwnd, &client);
-    MapWindowPoints(HWND_DESKTOP, hwnd, (LPPOINT)&client, 2);
+    //MapWindowPoints(HWND_DESKTOP, hwnd, (LPPOINT)&client, 2);
     return { client.left, client.top, client.right, client.bottom };
   }
 

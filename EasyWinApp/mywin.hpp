@@ -23,7 +23,8 @@ class MyWin : public easywin::MainWindow {
 public:
   using MainWindow::MainWindow;
 
-  MyWin() : MainWindow("My Window") {
+  void onCreate() override {
+    ManPanel whoop;
     addChild<ManPanel>(easywin::Point{ 100, 100 }, easywin::Size{ 250, 600 });
   }
 

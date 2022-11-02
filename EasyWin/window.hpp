@@ -7,10 +7,6 @@ namespace easywin {
   public:
     Window() = default;
 
-    Window(const char* title) {
-      create(title);
-    }
-
     void create(const char* title);
   };
 
