@@ -18,20 +18,4 @@ namespace easywin {
     void run();
   };
 
-  class WindowRef : public ContainerRef {
-  public:
-    using component_type = Window;
-
-    WindowRef() = default;
-
-    WindowRef(component_type& window) : ContainerRef{ window } {
-    }
-
-    component_type& component() const {
-      return static_cast<Window&>(*_component);
-    }
-  };
-
-  static_assert(component_ref<WindowRef>);
-
 }

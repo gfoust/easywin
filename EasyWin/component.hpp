@@ -45,52 +45,6 @@ namespace easywin {
     void destroy();
   };
 
-  class ComponentRef {
-  public:
-    using component_type = Component;
-
-    ComponentRef() = default;
-
-    ComponentRef(component_type& component) : _component{ &component } {
-    }
-
-    component_type& component() const {
-      return *_component;
-    }
-
-    Size clientSize() const {
-      return component().clientSize();
-    }
-
-    Rect clientRect() const {
-      return component().clientRect();
-    }
-
-    std::string text() const {
-      return component().text();
-    }
-
-    void setText(const char* text) {
-      component().setText(text);
-    }
-
-    void setText(const std::string& text) {
-      component().setText(text.data());
-    }
-
-  protected:
-    component_type* _component = nullptr;
-  };
-
-  template <typename RefT>
-  concept component_ref =
-    std::derived_from<RefT, ComponentRef> &&
-    std::derived_from<typename RefT::component_type, Component> &&
-    std::constructible_from<RefT, typename RefT::component_type&> &&
-    std::same_as<typename RefT::component_type&, decltype(std::declval<RefT>().component())>;
-  static_assert(component_ref<ComponentRef>);
-
-
   template <typename ComponentT, typename... Args>
   concept component_created_from =
     std::derived_from<ComponentT, Component> &&

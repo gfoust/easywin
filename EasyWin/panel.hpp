@@ -52,32 +52,4 @@ namespace easywin {
     std::optional<Size> content;
   };
 
-  class PanelRef : public ComponentRef {
-  public:
-    using component_type = Panel;
-
-    PanelRef() = default;
-
-    PanelRef(component_type& panel) : ComponentRef{ panel } {
-    }
-
-    component_type& component() const {
-      return static_cast<Panel&>(*_component);
-    }
-
-    void requestRepaint() {
-      component().requestRepaint();
-    }
-
-    Size contentSize() const {
-      return component().contentSize();
-    }
-
-    void resizeContent(Size size) {
-      component().resizeContent(size);
-    }
-  };
-
-  static_assert(component_ref<PanelRef>);
-  
 }

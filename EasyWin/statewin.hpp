@@ -1,5 +1,6 @@
 #pragma once
 #include "panel.hpp"
+#include "window.hpp"
 #include <concepts>
 #include <tuple>
 #include <type_traits>

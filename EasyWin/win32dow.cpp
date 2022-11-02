@@ -69,7 +69,7 @@ namespace easywin::impl {
       CreateCompatibleBitmap(screenHdc, client.right + 1, client.bottom + 1);
     HGDIOBJ oldBitmap = SelectObject(hdc, bitmap);
 
-    //BitBlt(hdc, 0, 0, client.right + 1, client.bottom + 1, screenHdc, 0, 0, SRCCOPY);
+    BitBlt(hdc, 0, 0, client.right + 1, client.bottom + 1, screenHdc, 0, 0, SRCCOPY);
 
     SelectObject(hdc, GetStockObject(DC_PEN));
     SelectObject(hdc, GetStockObject(DC_BRUSH));
